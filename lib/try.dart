@@ -148,7 +148,7 @@ Widget build(BuildContext context) {
       child: GridView.extent(
         maxCrossAxisExtent: 240,
         crossAxisSpacing: 15,
-        mainAxisSpacing: 10,
+        mainAxisSpacing: 15,
         children: [
           _buildGauge("Temp", sensorData["temperature"], 0, 60, Colors.red),
           _buildGauge("Humidity", sensorData["humidity"], 20, 100, Colors.blue),
@@ -216,20 +216,25 @@ Widget build(BuildContext context) {
   }
 
     return GestureDetector(
-      onTap: () {
-        navigateToGraphScreen(label);
-      },
-      child: Card(
-        elevation: 10,
-        color: const Color.fromARGB(255, 12, 1, 72),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+  onTap: () {
+    navigateToGraphScreen(label);
+  },child: SizedBox(height: 220,
+  child: Card(
+    
+    elevation: 10,
+    color: const Color.fromARGB(255, 12, 1, 72),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Label + Info icon in a Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 label,
@@ -239,56 +244,126 @@ Widget build(BuildContext context) {
                   color: Color.fromARGB(221, 234, 232, 232),
                 ),
               ),
-              SizedBox(
-                height: 95,
-                child: SfRadialGauge(
-                  axes: <RadialAxis>[
-                    RadialAxis(
-                      minimum: min,
-                      maximum: max,
-                      showLabels: true,
-                      showTicks: true,
-                      axisLabelStyle: const GaugeTextStyle(fontSize: 8),
-                      ranges: getGaugeRanges(label),
-                      pointers: <GaugePointer>[
-                        NeedlePointer(
-                          value: value,
-                          enableAnimation: true,
-                          needleColor: color,
-                          knobStyle: const KnobStyle(
-                            color: Color.fromARGB(255, 240, 239, 242),
-                            borderColor: Colors.black,
-                            borderWidth: 0.2,
-                          ),
+              IconButton(
+                icon: const Icon(Icons.info_outline, size: 16, color: Colors.white),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: Text('$label Info',style: TextStyle(color: Colors.white), ),
+                    
+                      content: Text(getSensorInfo(label),style: TextStyle(color: Colors.white),),backgroundColor: Color.fromARGB(255, 0, 1, 2),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Close'),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              Text(
-                value.toStringAsFixed(1),
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-              SizedBox(height: 4), 
-              Text(
-                status["message"],
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: status["color"],
-                ),
+                  );
+                },
               ),
             ],
           ),
-        ),
+          SizedBox(
+            height: 96,
+            child: SfRadialGauge(
+              axes: <RadialAxis>[
+                RadialAxis(
+                  labelOffset:10,
+                  interval: (max - min) / 2, // Shows 3 labels: min, mid, max
+                  minimum: min,
+                  maximum: max,
+                  showLabels: false,
+                  showTicks: false,
+                  axisLabelStyle: const GaugeTextStyle(fontSize: 10,color: Colors.white),  axisLineStyle: const AxisLineStyle(
+    thickness: 0.08,
+    thicknessUnit: GaugeSizeUnit.factor,
+  ),
+  annotations: <GaugeAnnotation>[
+    GaugeAnnotation(
+      widget: Text('${min.toStringAsFixed(0)}', style: const TextStyle(color: Colors.white, fontSize: 8)),
+      angle: 130,
+      positionFactor: 0.55,
+    ),
+    GaugeAnnotation(
+      widget: Text('${((min + max) / 2).toStringAsFixed(0)}', style: const TextStyle(color: Colors.white, fontSize: 8)),
+      angle: 280,
+      positionFactor: 0.55,
+    ),
+    GaugeAnnotation(
+      widget: Text('${max.toStringAsFixed(0)}', style: const TextStyle(color: Colors.white, fontSize: 8)),
+      angle: 50,
+      positionFactor: 0.55,
+    ),
+  ],
+
+                  
+                  ranges: getGaugeRanges(label),
+                  pointers: <GaugePointer>[
+                    NeedlePointer(
+                      value: value,
+                      enableAnimation: true,
+                      needleColor: color,
+                      knobStyle: const KnobStyle(
+                        color: Color.fromARGB(255, 240, 239, 242),
+                        borderColor: Colors.black,
+                        borderWidth: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Text(
+            value.toStringAsFixed(1),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+         // const SizedBox(height: 2),
+          Text(
+            status["message"],
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: status["color"],
+            ),
+          ),
+        ],
       ),
-    );
+    ),
+  ),),
+);
+
   }
+
+
+
+  String getSensorInfo(String label) {
+  switch (label) {
+    case "Temp":
+      return "Measures ambient temperature. Useful to detect changes in room or environmental temperature.";
+    case "Humidity":
+      return "Measures the amount of moisture in the air. Helps monitor indoor air quality and comfort.";
+    case "MQ135":
+      return "Air quality sensor that detects gases like NH3, NOx, alcohol, benzene, smoke, and CO2.";
+    case "PM1.0":
+      return "Detects fine particulate matter less than 1.0 micrometers in diameter.";
+    case "PM2.5":
+      return "Measures airborne particles with a diameter less than 2.5µm, which can be harmful to health.";
+    case "PM10":
+      return "Monitors larger particulate matter up to 10µm in size, often from dust, pollen, or smoke.";
+    default:
+      return "Sensor information not available.";
+  }
+}
+
 
   void navigateToGraphScreen(String label) {
     debugPrint(label);
